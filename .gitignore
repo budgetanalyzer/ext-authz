@@ -328,3 +328,8 @@ scratch/
 
 #Python cache
 __pycache__
+
+/ext-authz
+/coverage.out
+/.cache/
+
