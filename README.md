@@ -14,6 +14,8 @@ go test ./...
 docker build -t ext-authz:local .
 ```
 
+Run `gofmt -w *.go` before committing Go source changes.
+
 ## Configuration
 
 | Variable | Purpose | Default |
@@ -42,3 +44,14 @@ pinning, release metadata, and deployment documentation.
 
 The shared browser session contract is documented in
 `../orchestration/docs/architecture/session-edge-authorization-pattern.md`.
+
+## Release
+
+Release images publish from
+`.github/workflows/publish-release.yml` in this repository to
+`ghcr.io/budgetanalyzer/ext-authz`.
+
+The orchestration repository consumes released image digests in its production
+desired state and builds the local Tilt image from `../ext-authz`. Deployment
+and production runbooks live in `../orchestration/deploy/README.md` and
+`../orchestration/kubernetes/production/README.md`.

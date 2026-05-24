@@ -38,6 +38,7 @@ sed -n '1,220p' ../orchestration/docs/architecture/session-edge-authorization-pa
   integration: `../orchestration`
 - Shared browser session contract:
   `../orchestration/docs/architecture/session-edge-authorization-pattern.md`
+- Release image workflow: `.github/workflows/publish-release.yml`
 - Local service implementation: this repository
 
 ## Development Workflow
