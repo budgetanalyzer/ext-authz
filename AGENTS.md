@@ -56,6 +56,13 @@ Do not change the Redis session schema, cookie name, identity headers, ports,
 probes, or Istio fail-closed behavior without coordinating the orchestration
 repository documentation and manifests.
 
+## AI Session Handler Plans
+
+When creating an implementation or execution plan intended for AI Session
+Handler, follow the [AI Session Handler plan format](../ai-session-handler/docs/plan-format.md),
+use its canonical template, replace every placeholder, and retain the numbered
+`## Phase N: Title` headings.
+
 ## Code Exploration
 
 Use direct shell discovery commands such as `rg`, `find`, `sed`, and `go test`.
