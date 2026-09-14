@@ -44,11 +44,11 @@ missing-GitHub-token condition.
 
 ## Reachable vulnerability evidence
 
-`go-vulnerability-check.yml` runs after changes reach `main`, every Monday, and
-on manual dispatch. It installs the pinned official `govulncheck` CLI and runs
-both `govulncheck ./...` and `govulncheck -json ./...`. The workflow keeps the
-readable report, JSON event stream, stderr, scanner version, and exit-code summary
-for seven days.
+`go-vulnerability-check.yml` preserves pushes, Monday schedules, and manual
+dispatches on `main` and also accepts the exact trial ref. It installs the pinned
+official `govulncheck` CLI and runs both `govulncheck ./...` and
+`govulncheck -json ./...`. Main runs keep the readable report, JSON event stream,
+stderr, scanner version, and exit-code summary for seven days.
 
 Reachable findings are reported and uploaded without failing unrelated work.
 Scanner installation, package loading, vulnerability database access, analysis,
@@ -56,6 +56,16 @@ JSON generation or validation, empty required evidence, and artifact upload
 failures still fail the job. In particular, the text command's exit code 3 means
 findings, while any other unexpected text status or any nonzero JSON status is an
 operational error.
+
+Trial runs start with schedules, the optional Go cache, and uploads disabled.
+They measure the complete scanner output and can upload only one sealed one-day
+archive beneath the 25 MiB cap after the operator enables the repository upload
+variable. `build.yml` accepts trial pushes and pull requests based on either
+`main` or the exact trial branch; its measured evidence contains the build/test
+log but excludes the Docker image and layer cache. The exact variable contract is
+owned by the
+[orchestration trial workflow policy](../../orchestration/docs/dependency-automation.md#trial-workflow-controls).
+Release publishing remains unchanged.
 
 The application still declares Go 1.24. The current pinned scanner,
 `golang.org/x/vuln` v1.7.0, requires Go 1.25 or newer, so this workflow uses Go

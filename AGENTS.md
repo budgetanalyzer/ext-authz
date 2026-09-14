@@ -40,6 +40,9 @@ sed -n '1,220p' ../orchestration/docs/architecture/session-edge-authorization-pa
   `../orchestration/docs/architecture/session-edge-authorization-pattern.md`
 - Release image workflow: `.github/workflows/publish-release.yml`
 - Local service implementation: this repository
+- Dependency update, build-check, scanner, and trial measurement behavior:
+  `docs/dependency-automation.md`; read it before changing Renovate or GitHub
+  Actions.
 
 ## Documentation Maintenance
 
