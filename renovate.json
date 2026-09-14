@@ -1,0 +1,21 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>budgetanalyzer/orchestration//renovate-presets/default"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Track the govulncheck CLI used by the vulnerability workflow",
+      "managerFilePatterns": [
+        "/^\\.github\\/workflows\\/go-vulnerability-check\\.yml$/"
+      ],
+      "matchStrings": [
+        "GOVULNCHECK_VERSION:\\s*[\\\"']?(?<currentValue>v?\\d+\\.\\d+\\.\\d+)[\\\"']?"
+      ],
+      "datasourceTemplate": "go",
+      "depNameTemplate": "golang.org/x/vuln",
+      "versioningTemplate": "semver-coerced"
+    }
+  ]
+}

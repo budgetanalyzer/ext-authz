@@ -41,6 +41,11 @@ sed -n '1,220p' ../orchestration/docs/architecture/session-edge-authorization-pa
 - Release image workflow: `.github/workflows/publish-release.yml`
 - Local service implementation: this repository
 
+## Documentation Maintenance
+
+Before updating `AGENTS.md`, read and apply the
+[AGENTS.md checkstyle](https://github.com/budgetanalyzer/orchestration/blob/main/docs/agents-md-checkstyle.md).
+
 ## Development Workflow
 
 Use standard Go tooling:

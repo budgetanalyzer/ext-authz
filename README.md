@@ -16,6 +16,12 @@ docker build -t ext-authz:local .
 
 Run `gofmt -w *.go` before committing Go source changes.
 
+## Dependency Automation
+
+Renovate update discovery and the reachable Go vulnerability check are described
+in [`docs/dependency-automation.md`](docs/dependency-automation.md). Automation
+activation and dependency upgrades are separate, review-owned changes.
+
 ## Configuration
 
 | Variable | Purpose | Default |
