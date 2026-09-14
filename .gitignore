@@ -333,3 +333,5 @@ __pycache__
 /coverage.out
 /.cache/
 
+# AI Session Handler configuration
+.ai-session-handler/

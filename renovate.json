@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "github>budgetanalyzer/orchestration//renovate-presets/default"
+    "github>budgetanalyzer/orchestration//renovate-presets/default#dependency-automation-trial"
   ],
   "customManagers": [
     {
