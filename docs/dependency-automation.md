@@ -39,17 +39,17 @@ stream, stderr, scanner version, and exit-code summary.
 
 Reachable findings are reported and retained without becoming a merge gate.
 Scanner installation, package loading, vulnerability database access, analysis,
-JSON generation or validation, empty required evidence, archive preparation, and
-artifact upload failures still fail the job. In particular, the text command's
+JSON generation or validation, empty required evidence, and artifact upload
+failures still fail the job. In particular, the text command's
 exit code 3 means findings, while any other unexpected text status or any nonzero
 JSON status is an operational error.
 
-Every run passes the complete `govulncheck-results` directory to
-`.github/scripts/prepare-dependency-evidence.sh`. The helper creates one gzip
-archive from only the allowlisted path and rejects a compressed payload above
-25,165,824 bytes (24 MiB). The workflow uploads that already-compressed archive
-with action compression disabled and retains it for seven days. Do not trim
-scanner output to fit the cap; investigate unexpected growth instead.
+Every run uploads the `govulncheck-results` directory directly as the single
+`govulncheck-<sha>` artifact and retains it for seven days. A successful run
+must include the scanner metadata and complete human-readable and JSON reports;
+incomplete successful-run evidence fails under the shared orchestration policy.
+The always-run upload step retains diagnostics produced before a failed scan,
+while the original error keeps the workflow failed.
 
 The application declares its own Go version in `go.mod`. The scanner workflow
 uses the separate analysis toolchain declared in the workflow and sets
