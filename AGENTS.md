@@ -40,6 +40,14 @@ sed -n '1,220p' ../orchestration/docs/architecture/session-edge-authorization-pa
   `../orchestration/docs/architecture/session-edge-authorization-pattern.md`
 - Release image workflow: `.github/workflows/publish-release.yml`
 - Local service implementation: this repository
+- Dependency update, build-check, scanner, and evidence artifact behavior:
+  `docs/dependency-automation.md`; read it before changing Renovate or GitHub
+  Actions.
+
+## Documentation Maintenance
+
+Before updating `AGENTS.md`, read and apply the
+[AGENTS.md checkstyle](https://github.com/budgetanalyzer/orchestration/blob/main/docs/agents-md-checkstyle.md).
 
 ## Development Workflow
 
