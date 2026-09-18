@@ -18,9 +18,10 @@ Run `gofmt -w *.go` before committing Go source changes.
 
 ## Dependency Automation
 
-Renovate update discovery and the reachable Go vulnerability check are described
-in [`docs/dependency-automation.md`](docs/dependency-automation.md). Automation
-activation and dependency upgrades are separate, review-owned changes.
+Production Renovate discovery and the reachable Go vulnerability check on
+`main` are described in
+[`docs/dependency-automation.md`](docs/dependency-automation.md). Dependency
+upgrades remain review-owned and are never automerged.
 
 ## Configuration
 

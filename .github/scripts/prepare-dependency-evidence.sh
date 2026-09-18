@@ -18,9 +18,8 @@ if [[ "${output_archive}" != *.tar.gz ]] \
   exit 2
 fi
 
-# Keep one MiB of headroom beneath the operator-approved 25 MiB artifact cap
-# for the upload service's archive wrapper and metadata.
-max_bytes=25165824
+# Keep one MiB of headroom beneath the former 25 MiB retained-size threshold.
+max_compressed_bytes=25165824
 
 mkdir -p "$(dirname "${output_archive}")"
 rm -f "${output_archive}"
@@ -34,7 +33,7 @@ trap 'rm -f "${path_list}" "${tar_file}"' EXIT
 total_source_bytes=0
 {
   printf 'label=%s\n' "${label}"
-  printf 'cap_bytes=%s\n' "${max_bytes}"
+  printf 'max_compressed_bytes=%s\n' "${max_compressed_bytes}"
   echo 'allowlisted_paths:'
 } > "${measurement_file}"
 
@@ -60,9 +59,9 @@ uncompressed_bytes="$(stat --format='%s' "${tar_file}")"
 gzip --best --stdout "${tar_file}" > "${output_archive}"
 compressed_bytes="$(stat --format='%s' "${output_archive}")"
 
-upload_allowed=false
-if [[ "${uncompressed_bytes}" -le "${max_bytes}" && "${compressed_bytes}" -le "${max_bytes}" ]]; then
-  upload_allowed=true
+within_limit=false
+if [[ "${compressed_bytes}" -le "${max_compressed_bytes}" ]]; then
+  within_limit=true
 fi
 
 {
@@ -70,7 +69,7 @@ fi
   printf 'source_bytes=%s\n' "${total_source_bytes}"
   printf 'uncompressed_tar_bytes=%s\n' "${uncompressed_bytes}"
   printf 'compressed_archive_bytes=%s\n' "${compressed_bytes}"
-  printf 'upload_allowed=%s\n' "${upload_allowed}"
+  printf 'within_limit=%s\n' "${within_limit}"
 } >> "${measurement_file}"
 
 if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
@@ -79,22 +78,28 @@ if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
     printf 'source_bytes=%s\n' "${total_source_bytes}"
     printf 'uncompressed_bytes=%s\n' "${uncompressed_bytes}"
     printf 'compressed_bytes=%s\n' "${compressed_bytes}"
-    printf 'upload_allowed=%s\n' "${upload_allowed}"
+    printf 'within_limit=%s\n' "${within_limit}"
   } >> "${GITHUB_OUTPUT}"
 fi
 
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
   {
     printf '## %s evidence measurement\n\n' "${label}"
-    echo '| Source bytes | Tar bytes (includes archive overhead) | Compressed bytes | Cap bytes | Upload allowed |'
+    echo '| Source bytes | Tar bytes | Compressed bytes | Compressed cap | Within limit |'
     echo '| ---: | ---: | ---: | ---: | --- |'
     printf '| %s | %s | %s | %s | %s |\n' \
-      "${total_source_bytes}" "${uncompressed_bytes}" "${compressed_bytes}" "${max_bytes}" "${upload_allowed}"
+      "${total_source_bytes}" "${uncompressed_bytes}" "${compressed_bytes}" \
+      "${max_compressed_bytes}" "${within_limit}"
     echo
-    printf 'The sealed archive contains only the explicit paths listed in %s.\n' "${measurement_file}"
-    if [[ "${upload_allowed}" != true ]]; then
+    printf 'The archive contains only the explicit paths listed in %s.\n' "${measurement_file}"
+    if [[ "${within_limit}" != true ]]; then
       echo
-      echo '**Evidence delivery failure:** the complete bundle exceeds the trial cap; upload is blocked without trimming.'
+      echo '**Evidence delivery failure:** the complete compressed bundle exceeds the 24 MiB cap.'
     fi
   } >> "${GITHUB_STEP_SUMMARY}"
+fi
+
+if [[ "${within_limit}" != true ]]; then
+  echo "The compressed evidence archive exceeds ${max_compressed_bytes} bytes; refusing upload." >&2
+  exit 1
 fi
