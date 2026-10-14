@@ -74,11 +74,13 @@ use its canonical template, replace every placeholder, and retain the numbered
 Run a specific plan through the workspace wrapper with:
 
 ```bash
+repo_root=$(git rev-parse --show-toplevel)
+workspace_parent=$(dirname "$repo_root")
 ai-session-handler run \
-  --plan /workspace/REPOSITORY/docs/plans/PLAN.md \
+  --plan "$repo_root/docs/plans/PLAN.md" \
   --max-phases 999 \
   --quiet \
-  --agent-cmd "/workspace/ai-session-handler/.venv/bin/ai-session-handler-codex-high --model MODEL"
+  --agent-cmd "$workspace_parent/ai-session-handler/.venv/bin/ai-session-handler-codex-high --model MODEL"
 ```
 
 Omit `--model MODEL` from the quoted agent command to use the wrapper's
@@ -88,3 +90,15 @@ configured or default model.
 
 Use direct shell discovery commands such as `rg`, `find`, `sed`, and `go test`.
 Do not use Agent/subagent tools for code exploration.
+
+## Path Portability
+
+Use repository-relative, sibling-relative, or dynamically resolved paths.
+Never hardcode machine-specific checkout locations such as `/workspace`.
+
+## No Git Write Operations
+
+Never run Git write commands such as `commit`, `push`, `checkout`, `reset`, or
+branch manipulation unless the user explicitly requests them. Read-only
+inspection commands such as `git status`, `git diff`, and `git log` are
+allowed.
