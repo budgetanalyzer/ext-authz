@@ -7,6 +7,28 @@ reads the shared Redis session hash written by Session Gateway, authorizes
 requests based on the session state, and returns identity headers for the
 downstream API path.
 
+## Authorization Responses
+
+Valid sessions receive the existing `200` response with `X-User-Id`, `X-Roles`,
+and `X-Permissions` identity headers. Denials use the minimal shared
+`ApiErrorResponse` JSON wire shape:
+
+| Condition | Status | Response |
+|-----------|--------|----------|
+| Missing, blank, unknown, or expired session | `401` | `{"type":"UNAUTHORIZED","message":"Authentication required"}` |
+| Session lookup, parsing, Redis, or other infrastructure failure | `503` | `{"type":"SERVICE_UNAVAILABLE","message":"Service Unavailable"}` |
+
+Authentication failures intentionally share one generic response so callers
+cannot distinguish session state. Operational failures remain fail-closed but
+are not misclassified as invalid credentials.
+
+The Go response representation is local to this service and does not depend on
+service-common binaries. Its `type` and `message` fields must remain aligned
+with the shared `ApiErrorResponse` contract documented in
+[`../service-common/docs/error-handling.md`](../service-common/docs/error-handling.md).
+The session storage and edge authorization contract remains owned by
+[`../orchestration/docs/architecture/session-edge-authorization-pattern.md`](../orchestration/docs/architecture/session-edge-authorization-pattern.md).
+
 ## Local Commands
 
 ```bash
