@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -94,11 +96,18 @@ func NewSessionStore(cfg Config) (*SessionStore, error) {
 	return nil, fmt.Errorf("redis connection failed after %d attempts: %w", maxRetries, lastErr)
 }
 
+// sessionKey builds the Redis session key from the lowercase hex SHA-256 of
+// the UTF-8 cookie value, matching Session Gateway's key derivation.
+func sessionKey(prefix, sessionID string) string {
+	digest := sha256.Sum256([]byte(sessionID))
+	return prefix + hex.EncodeToString(digest[:])
+}
+
 // LookupSession retrieves a session from Redis by ID.
 // Returns ErrSessionNotFound if the key doesn't exist,
 // ErrSessionExpired if the session has passed its expires_at.
 func (s *SessionStore) LookupSession(ctx context.Context, sessionID string) (*SessionData, error) {
-	key := s.keyPrefix + sessionID
+	key := sessionKey(s.keyPrefix, sessionID)
 
 	result, err := s.client.HGetAll(ctx, key).Result()
 	if err != nil {
