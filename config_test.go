@@ -20,8 +20,8 @@ func TestLoadConfigDefaults(t *testing.T) {
 	if cfg.SessionKeyPrefix != "session:" {
 		t.Fatalf("SessionKeyPrefix = %q, want %q", cfg.SessionKeyPrefix, "session:")
 	}
-	if cfg.SessionCookieName != "BA_SESSION" {
-		t.Fatalf("SessionCookieName = %q, want %q", cfg.SessionCookieName, "BA_SESSION")
+	if cfg.SessionCookieName != "__Host-BA_SESSION" {
+		t.Fatalf("SessionCookieName = %q, want %q", cfg.SessionCookieName, "__Host-BA_SESSION")
 	}
 	if cfg.HTTPPort != "9002" {
 		t.Fatalf("HTTPPort = %q, want %q", cfg.HTTPPort, "9002")

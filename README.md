@@ -74,7 +74,7 @@ upgrades remain review-owned and are never automerged.
 | `REDIS_EXT_AUTHZ_PASSWORD` | Redis ACL password for this service. | empty |
 | `REDIS_TLS` | Enables TLS for Redis when set to `true`. | `false` |
 | `REDIS_CA_CERT` | CA certificate path for Redis TLS. | empty |
-| `SESSION_COOKIE_NAME` | Browser session cookie name. | `BA_SESSION` |
+| `SESSION_COOKIE_NAME` | Browser session cookie name. Must match Session Gateway. | `__Host-BA_SESSION` |
 | `SESSION_KEY_PREFIX` | Redis key prefix for sessions. | `session:` |
 | `LOG_FORMAT` | Logger format, `json` or `text`. | `json` |
 
