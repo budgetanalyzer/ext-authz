@@ -27,7 +27,7 @@ func LoadConfig() Config {
 		HTTPPort:          envOrDefault("HTTP_PORT", "9002"),
 		HealthPort:        envOrDefault("HEALTH_PORT", "8090"),
 		SessionKeyPrefix:  envOrDefault("SESSION_KEY_PREFIX", "session:"),
-		SessionCookieName: envOrDefault("SESSION_COOKIE_NAME", "BA_SESSION"),
+		SessionCookieName: envOrDefault("SESSION_COOKIE_NAME", "__Host-BA_SESSION"),
 		LogLevel:          envOrDefault("LOG_LEVEL", "info"),
 		LogFormat:         envOrDefault("LOG_FORMAT", "json"),
 	}

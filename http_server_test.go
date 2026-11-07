@@ -27,7 +27,7 @@ func (s *stubSessionLookupStore) LookupSession(_ context.Context, sessionID stri
 	return s.sessionData, nil
 }
 
-func TestHTTPAuthHandlerAllowsBASessionCookieByDefault(t *testing.T) {
+func TestHTTPAuthHandlerAllowsHostSessionCookieByDefault(t *testing.T) {
 	store := &stubSessionLookupStore{
 		sessionData: &SessionData{
 			UserID:      "user-123",
@@ -37,7 +37,7 @@ func TestHTTPAuthHandlerAllowsBASessionCookieByDefault(t *testing.T) {
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "http://ext-authz/check", nil)
-	req.AddCookie(&http.Cookie{Name: "BA_SESSION", Value: "session-123"})
+	req.AddCookie(&http.Cookie{Name: "__Host-BA_SESSION", Value: "session-123"})
 	req.Header.Set("X-Envoy-Original-Path", "/api/v1/transactions")
 
 	recorder := httptest.NewRecorder()
@@ -87,7 +87,7 @@ func TestHTTPAuthHandlerDenials(t *testing.T) {
 		},
 		{
 			name:         "blank cookie",
-			cookieName:   "BA_SESSION",
+			cookieName:   "__Host-BA_SESSION",
 			wantStatus:   http.StatusUnauthorized,
 			wantResponse: map[string]string{"type": "UNAUTHORIZED", "message": "Authentication required"},
 		},
@@ -101,8 +101,17 @@ func TestHTTPAuthHandlerDenials(t *testing.T) {
 			sensitive:    []string{"legacy-session"},
 		},
 		{
-			name:         "unknown session",
+			name:         "pre-__Host- cookie name",
 			cookieName:   "BA_SESSION",
+			cookieValue:  "old-session",
+			wantStatus:   http.StatusUnauthorized,
+			wantResponse: map[string]string{"type": "UNAUTHORIZED", "message": "Authentication required"},
+			wantLookups:  0,
+			sensitive:    []string{"old-session"},
+		},
+		{
+			name:         "unknown session",
+			cookieName:   "__Host-BA_SESSION",
 			cookieValue:  "missing-session",
 			storeError:   ErrSessionNotFound,
 			wantStatus:   http.StatusUnauthorized,
@@ -112,7 +121,7 @@ func TestHTTPAuthHandlerDenials(t *testing.T) {
 		},
 		{
 			name:         "expired session",
-			cookieName:   "BA_SESSION",
+			cookieName:   "__Host-BA_SESSION",
 			cookieValue:  "expired-session",
 			storeError:   ErrSessionExpired,
 			wantStatus:   http.StatusUnauthorized,
@@ -122,7 +131,7 @@ func TestHTTPAuthHandlerDenials(t *testing.T) {
 		},
 		{
 			name:         "unexpected store failure",
-			cookieName:   "BA_SESSION",
+			cookieName:   "__Host-BA_SESSION",
 			cookieValue:  "secret-session-id",
 			storeError:   errors.New("redis unavailable at internal-host:6379"),
 			wantStatus:   http.StatusServiceUnavailable,
@@ -194,7 +203,7 @@ func TestHTTPAuthHandlerRejectsMissingSessionResultAsUnavailable(t *testing.T) {
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "http://ext-authz/check", nil)
-	req.AddCookie(&http.Cookie{Name: "BA_SESSION", Value: "session-123"})
+	req.AddCookie(&http.Cookie{Name: "__Host-BA_SESSION", Value: "session-123"})
 
 	recorder := httptest.NewRecorder()
 	NewHTTPAuthHandler(store, LoadConfig()).ServeHTTP(recorder, req)
