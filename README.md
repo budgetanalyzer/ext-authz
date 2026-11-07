@@ -7,6 +7,16 @@ reads the shared Redis session hash written by Session Gateway, authorizes
 requests based on the session state, and returns identity headers for the
 downstream API path.
 
+## Session Key Derivation
+
+The Redis key is `SESSION_KEY_PREFIX` followed by the lowercase hex SHA-256 of
+the UTF-8 session cookie value, matching Session Gateway. The raw cookie value
+never appears in a Redis key. For example, the token
+`3f2504e0-4f89-41d3-9a0c-0305e82c3301` resolves to
+`session:16362f566387b3cf5a6e92fb0a986c76ca20eb3a0c12cbdfbd0b29501e0c18df`.
+There is no fallback to raw-token keys; after switching to hashed keys, flush
+existing sessions with `../orchestration/scripts/ops/flush-redis.sh`.
+
 ## Authorization Responses
 
 Valid sessions receive the existing `200` response with `X-User-Id`, `X-Roles`,
@@ -21,6 +31,14 @@ and `X-Permissions` identity headers. Denials use the minimal shared
 Authentication failures intentionally share one generic response so callers
 cannot distinguish session state. Operational failures remain fail-closed but
 are not misclassified as invalid credentials.
+
+The JSON bodies above are what this service returns to Envoy. A `503` from this
+service reaches clients as an empty `503` with no `content-type` from the
+ingress. The Istio `ext_authz` provider treats authorizer 5xx responses,
+timeouts, and unreachable authorizers as errors, answers with
+`statusOnError: "503"` while failing closed, and discards the authorizer body.
+The provider configuration is owned by
+`../orchestration/kubernetes/istio/istiod-values.yaml`.
 
 The Go response representation is local to this service and does not depend on
 service-common binaries. Its `type` and `message` fields must remain aligned
