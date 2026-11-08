@@ -19,10 +19,11 @@ regex manager covers the `GOVULNCHECK_VERSION` value in
 
 Renovate proposals target `main` and must pass the existing Build workflow. That
 workflow runs for pushes and pull requests to `main` and for manual dispatches,
-using the normal Go module cache before checking formatting, running tests, and
-building the service image. Review each proposal for release notes, compatibility,
-and expected build and scanner behavior; a successful bot lookup or build is not
-approval to merge.
+using the Go release line declared in `go.mod` and the normal Go module cache
+before checking formatting, running tests, and building the service image. The
+Docker builder must remain on that same supported release line. Review each
+proposal for release notes, compatibility, and expected build and scanner
+behavior; a successful bot lookup or build is not approval to merge.
 
 ### Image build check
 
@@ -93,7 +94,9 @@ The application declares its own Go version in `go.mod`. The scanner workflow
 uses the separate analysis toolchain declared in the workflow and sets
 `GOTOOLCHAIN=local`, preventing an implicit application toolchain change. Updating
 the analysis toolchain or scanner pin does not by itself update the application's
-Go directive or Docker builder image.
+Go directive or Docker builder image. Because local toolchain mode cannot load a
+module that declares a newer Go directive, raising the `go.mod` release line
+requires raising the workflow's analysis toolchain in the same change.
 
 ### Reachability limits
 
@@ -114,9 +117,9 @@ run the same durable wrapper:
 ```bash
 scanner_bin="$(mktemp -d)"
 scan_output="$(mktemp -d)"
-GOBIN="${scanner_bin}" GOTOOLCHAIN=go1.26.8 \
-  go install golang.org/x/vuln/cmd/govulncheck@v1.7.0
-PATH="${scanner_bin}:${PATH}" GOTOOLCHAIN=go1.26.8 \
+GOBIN="${scanner_bin}" GOTOOLCHAIN=go1.27.3 \
+  go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
+PATH="${scanner_bin}:${PATH}" GOTOOLCHAIN=go1.27.3 \
   ./scripts/run-govulncheck.sh "${scan_output}"
 printf 'Evidence: %s\n' "${scan_output}"
 ```

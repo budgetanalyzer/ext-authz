@@ -1,6 +1,6 @@
 module github.com/budgetanalyzer/ext-authz
 
-go 1.24
+go 1.27
 
 require github.com/redis/go-redis/v9 v9.7.3
 

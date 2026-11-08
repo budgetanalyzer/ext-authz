@@ -47,7 +47,29 @@ with the shared `ApiErrorResponse` contract documented in
 The session storage and edge authorization contract remains owned by
 [`../orchestration/docs/architecture/session-edge-authorization-pattern.md`](../orchestration/docs/architecture/session-edge-authorization-pattern.md).
 
+## Runtime Health
+
+The health listener exposes two distinct checks:
+
+| Endpoint | Meaning | Redis dependency |
+|----------|---------|------------------|
+| `/livez` | The ext-authz process is running. | None |
+| `/readyz` | The service can reach Redis and authorize requests. | Redis `PING` |
+
+The health listener starts before the first Redis connection attempt. If Redis
+is unavailable, `/livez` remains healthy, `/readyz` returns `503`, and session
+lookups continue to fail closed with the authorization response documented
+above. Redis connection attempts continue in the background with capped
+backoff; exhausting a fixed startup retry count cannot terminate the process.
+
+Both the health and authorization HTTP servers bound header reads, request
+reads, response writes, and idle connections. Their write timeout exceeds the
+Redis readiness call budget.
+
 ## Local Commands
+
+The application supports the Go 1.27 release line. Build CI reads this version
+from `go.mod`, and the Docker builder uses the same release line.
 
 ```bash
 go test ./...

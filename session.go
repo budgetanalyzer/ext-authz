@@ -22,6 +22,12 @@ var (
 	ErrSessionExpired  = errors.New("session expired")
 )
 
+const (
+	redisPingTimeout     = 2 * time.Second
+	redisRetryStep       = 500 * time.Millisecond
+	redisMaxRetryBackoff = 5 * time.Second
+)
+
 // SessionData holds the resolved session fields from Redis.
 type SessionData struct {
 	UserID      string
@@ -36,8 +42,8 @@ type SessionStore struct {
 	keyPrefix string
 }
 
-// NewSessionStore creates a Redis-backed session store and verifies connectivity.
-// Retries the connection with backoff to handle startup ordering.
+// NewSessionStore creates a Redis-backed session store without making a network
+// connection. Call WaitForRedis in the background to monitor initial readiness.
 func NewSessionStore(cfg Config) (*SessionStore, error) {
 	opts := &redis.Options{
 		Addr:        cfg.RedisAddr,
@@ -75,25 +81,57 @@ func NewSessionStore(cfg Config) (*SessionStore, error) {
 	}
 
 	client := redis.NewClient(opts)
+	return &SessionStore{
+		client:    client,
+		keyPrefix: cfg.SessionKeyPrefix,
+	}, nil
+}
 
-	maxRetries := 10
-	var lastErr error
-	for i := range maxRetries {
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-		lastErr = client.Ping(ctx).Err()
+type redisPingFunc func(context.Context) error
+type redisBackoffFunc func(int) time.Duration
+
+// WaitForRedis retries until Redis responds or the context is canceled. A
+// dependency outage never exhausts the retry loop or terminates the process.
+func (s *SessionStore) WaitForRedis(ctx context.Context) error {
+	return waitForRedis(ctx, s.Ping, redisRetryBackoff)
+}
+
+func waitForRedis(ctx context.Context, ping redisPingFunc, backoff redisBackoffFunc) error {
+	for attempt := 1; ; attempt++ {
+		pingCtx, cancel := context.WithTimeout(ctx, redisPingTimeout)
+		err := ping(pingCtx)
 		cancel()
-		if lastErr == nil {
-			return &SessionStore{
-				client:    client,
-				keyPrefix: cfg.SessionKeyPrefix,
-			}, nil
+		if err == nil {
+			slog.Info("connected to redis", "attempt", attempt)
+			return nil
 		}
-		backoff := time.Duration(i+1) * 500 * time.Millisecond
-		slog.Warn("redis not ready, retrying", "attempt", i+1, "backoff", backoff, "error", lastErr)
-		time.Sleep(backoff)
-	}
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
 
-	return nil, fmt.Errorf("redis connection failed after %d attempts: %w", maxRetries, lastErr)
+		delay := backoff(attempt)
+		slog.Warn("redis not ready, retrying", "attempt", attempt, "backoff", delay, "error", err)
+		timer := time.NewTimer(delay)
+		select {
+		case <-ctx.Done():
+			if !timer.Stop() {
+				<-timer.C
+			}
+			return ctx.Err()
+		case <-timer.C:
+		}
+	}
+}
+
+func redisRetryBackoff(attempt int) time.Duration {
+	if attempt < 1 {
+		attempt = 1
+	}
+	if attempt >= int(redisMaxRetryBackoff/redisRetryStep) {
+		return redisMaxRetryBackoff
+	}
+	delay := time.Duration(attempt) * redisRetryStep
+	return delay
 }
 
 // sessionKey builds the Redis session key from the lowercase hex SHA-256 of
@@ -139,4 +177,9 @@ func (s *SessionStore) LookupSession(ctx context.Context, sessionID string) (*Se
 // Ping checks Redis connectivity for health checks.
 func (s *SessionStore) Ping(ctx context.Context) error {
 	return s.client.Ping(ctx).Err()
+}
+
+// Close releases resources held by the Redis client.
+func (s *SessionStore) Close() error {
+	return s.client.Close()
 }
