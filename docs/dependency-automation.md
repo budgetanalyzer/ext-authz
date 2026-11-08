@@ -19,10 +19,11 @@ regex manager covers the `GOVULNCHECK_VERSION` value in
 
 Renovate proposals target `main` and must pass the existing Build workflow. That
 workflow runs for pushes and pull requests to `main` and for manual dispatches,
-using the normal Go module cache before checking formatting, running tests, and
-building the service image. Review each proposal for release notes, compatibility,
-and expected build and scanner behavior; a successful bot lookup or build is not
-approval to merge.
+using the Go release line declared in `go.mod` and the normal Go module cache
+before checking formatting, running tests, and building the service image. The
+Docker builder must remain on that same supported release line. Review each
+proposal for release notes, compatibility, and expected build and scanner
+behavior; a successful bot lookup or build is not approval to merge.
 
 ### Image build check
 
