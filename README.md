@@ -91,7 +91,7 @@ upgrades remain review-owned and are never automerged.
 |----------|---------|---------|
 | `HTTP_PORT` | HTTP ext_authz listener port. | `9002` |
 | `HEALTH_PORT` | Health listener port. | `8090` |
-| `REDIS_ADDR` | Redis host and port. | `redis.infrastructure:6379` |
+| `REDIS_ADDR` | Redis host and port. | `redis-session.infrastructure:6379` |
 | `REDIS_USERNAME` | Redis ACL username. | empty |
 | `REDIS_EXT_AUTHZ_PASSWORD` | Redis ACL password for this service. | empty |
 | `REDIS_TLS` | Enables TLS for Redis when set to `true`. | `false` |

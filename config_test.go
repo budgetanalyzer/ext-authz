@@ -17,6 +17,9 @@ func TestLoadConfigDefaults(t *testing.T) {
 
 	cfg := LoadConfig()
 
+	if cfg.RedisAddr != "redis-session.infrastructure:6379" {
+		t.Fatalf("RedisAddr = %q, want %q", cfg.RedisAddr, "redis-session.infrastructure:6379")
+	}
 	if cfg.SessionKeyPrefix != "session:" {
 		t.Fatalf("SessionKeyPrefix = %q, want %q", cfg.SessionKeyPrefix, "session:")
 	}
