@@ -19,7 +19,7 @@ type Config struct {
 
 func LoadConfig() Config {
 	return Config{
-		RedisAddr:         envOrDefault("REDIS_ADDR", "redis.infrastructure:6379"),
+		RedisAddr:         envOrDefault("REDIS_ADDR", "redis-session.infrastructure:6379"),
 		RedisUsername:     envOrDefault("REDIS_USERNAME", ""),
 		RedisPassword:     envOrDefault("REDIS_EXT_AUTHZ_PASSWORD", ""),
 		RedisTLS:          envOrDefault("REDIS_TLS", "false") == "true",
