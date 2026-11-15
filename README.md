@@ -14,8 +14,7 @@ the UTF-8 session cookie value, matching Session Gateway. The raw cookie value
 never appears in a Redis key. For example, the token
 `3f2504e0-4f89-41d3-9a0c-0305e82c3301` resolves to
 `session:16362f566387b3cf5a6e92fb0a986c76ca20eb3a0c12cbdfbd0b29501e0c18df`.
-There is no fallback to raw-token keys; after switching to hashed keys, flush
-existing sessions with `../orchestration/scripts/ops/flush-redis.sh`.
+There is no fallback to raw-token keys.
 
 ## Authorization Responses
 
